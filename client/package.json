@@ -16,6 +16,7 @@
     "@imagekit/react": "^5.0.1",
     "react": "19.0.0-rc-8b08e99e-20240713",
     "react-dom": "19.0.0-rc-8b08e99e-20240713",
+    "react-markdown": "^10.1.0",
     "react-router-dom": "^7.9.5",
     "react-type-animation": "^3.2.0"
   },

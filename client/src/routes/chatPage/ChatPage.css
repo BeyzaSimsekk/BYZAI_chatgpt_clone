@@ -23,6 +23,10 @@
             flex-direction: column;
             gap: 20px;
 
+            p, li{
+                margin: 10px 0px;
+            }
+
             .message{
                 padding: 20px;
 
