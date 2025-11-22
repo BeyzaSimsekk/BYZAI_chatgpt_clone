@@ -2,6 +2,7 @@ import { useEffect, useRef } from "react";
 import "./NewPrompt.css";
 import Upload from "../Upload/Upload.jsx";
 import { useState } from "react";
+import model from "../../lib/gemini.js";
 
 const NewPrompt = () => {
   const endRef = useRef(null);
@@ -15,6 +16,25 @@ const NewPrompt = () => {
   useEffect(() => {
     endRef.current.scrollIntoView({ behavior: "smooth" });
   }, []);
+
+  const add = async () => {
+    const prompt = "Write a story about an AI and magic ";
+
+    // const listModels = async () => {
+    //   const KEY = import.meta.env.VITE_GEMINI_PUBLIC_KEY; // senin public key
+    //   const res = await fetch(
+    //     `https://generativelanguage.googleapis.com/v1beta/models?key=${KEY}`
+    //   );
+    //   const data = await res.json();
+    //   console.log("ListModels result:", data);
+    // };
+    // await listModels();
+
+    const result = await model.generateContent(prompt);
+    const response = await result.response;
+    const text = response.text();
+    console.log(text);
+  };
 
   return (
     <>
@@ -34,6 +54,7 @@ const NewPrompt = () => {
         />
       )}
 
+      <button onClick={add}>TEST AI</button>
       <div className="endChat" ref={endRef}></div>
       <form className="newForm">
         <Upload setImg={setImg} />
