@@ -5,7 +5,8 @@ import { useState } from "react";
 import model from "../../lib/gemini.js";
 
 const NewPrompt = () => {
-  const endRef = useRef(null);
+  const [question, setQuestion] = useState("");
+  const [answer, setAnswer] = useState("");
   const [img, setImg] = useState({
     isLoading: false,
     error: "",
@@ -13,13 +14,13 @@ const NewPrompt = () => {
     aiData: {},
   });
 
+  const endRef = useRef(null);
+
   useEffect(() => {
     endRef.current.scrollIntoView({ behavior: "smooth" });
   }, []);
 
-  const add = async () => {
-    const prompt = "Write a story about an AI and magic ";
-
+  const add = async (text) => {
     // const listModels = async () => {
     //   const KEY = import.meta.env.VITE_GEMINI_PUBLIC_KEY; // senin public key
     //   const res = await fetch(
@@ -30,10 +31,20 @@ const NewPrompt = () => {
     // };
     // await listModels();
 
-    const result = await model.generateContent(prompt);
+    setQuestion(text);
+
+    const result = await model.generateContent(text);
     const response = await result.response;
-    const text = response.text();
-    console.log(text);
+    setAnswer(response.text());
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+
+    const text = e.target.text.value;
+    if (!text) return;
+
+    add(text);
   };
 
   return (
@@ -54,12 +65,14 @@ const NewPrompt = () => {
         />
       )}
 
-      <button onClick={add}>TEST AI</button>
+      {question && <div className="message user">{question}</div>}
+      {answer && <div className="message">{answer}</div>}
+
       <div className="endChat" ref={endRef}></div>
-      <form className="newForm">
+      <form className="newForm" onSubmit={handleSubmit}>
         <Upload setImg={setImg} />
         <input id="file" type="file" multiple={false} hidden />
-        <input type="text" placeholder="Ask anything..." />
+        <input type="text" name="text" placeholder="Ask anything..." />
         <button>
           <img src="/arrow.png" alt="" />
         </button>
