@@ -8,14 +8,14 @@ import apiClient from "../../lib/api";
 const Homepage = () => {
   const [typingStatus, setTypingStatus] = useState("human1");
 
-  const test = async () => {
-    try {
-      const data = await apiClient.get("/api/test");
-      console.log(data);
-    } catch (error) {
-      console.error("Test failed:", error);
-    }
-  };
+  // const test = async () => {
+  //   try {
+  //     const data = await apiClient.get("/api/test");
+  //     console.log(data);
+  //   } catch (error) {
+  //     console.error("Test failed:", error);
+  //   }
+  // };
 
   return (
     <div className="homepage">
@@ -29,7 +29,7 @@ const Homepage = () => {
           and instant answers.
         </h3>
         <Link to="/dashboard">Get Started</Link>
-        <button onClick={test}>TEST BACKEND AUTH</button>
+        {/* <button onClick={test}>TEST BACKEND AUTH</button> */}
       </div>
       {/* Right Side */}
       <div className="right">

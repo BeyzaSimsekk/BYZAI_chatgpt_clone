@@ -1,8 +1,11 @@
 import "./DashboardPage.css";
 import { useAuth } from "@clerk/clerk-react";
+import apiClient from "../../lib/api";
+import { useNavigate } from "react-router-dom";
 
 const DashboardPage = () => {
   const { userId } = useAuth();
+  const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -10,14 +13,18 @@ const DashboardPage = () => {
     const text = e.target.text.value;
     if (!text) return;
 
-    await fetch("http://localhost:3000/api/chats", {
-      method: "POST",
-      credentials: "include",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ text }),
-    });
+    try {
+      // Post request to create a new chat with apiClient
+      const response = await apiClient.post("/api/chats", { text });
+      console.log("Chat oluşturuldu:", response);
+
+      // Formu temizle
+      e.target.reset();
+
+      navigate(`/dashboard/chats/${response}`);
+    } catch (error) {
+      console.error("Chat oluşturma hatası:", error);
+    }
   };
 
   return (
