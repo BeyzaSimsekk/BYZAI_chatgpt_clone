@@ -1,20 +1,24 @@
 import express from "express";
-import dotenv from "dotenv";
+//import dotenv from "dotenv";
 import cors from "cors";
 import ImageKit from 'imagekit';
 import mongoose from "mongoose";
 import Chat from "./models/chat.js";
 import UserChats from "./models/userChats.js";
+import { ClerkExpressRequireAuth } from "@clerk/clerk-sdk-node";
 
 
-dotenv.config();
+//dotenv.config();
 
 const port = process.env.PORT || 3000;
 const app = express();
 
-app.use(cors({
-    origin: process.env.CLIENT_URL
-}));
+app.use(
+  cors({
+    origin: process.env.CLIENT_URL,
+    credentials: true,
+  })
+);
 
 app.use(express.json());
 
@@ -38,7 +42,13 @@ app.get("/api/upload", (req,res) => {
     res.send(result);
 });
 
-app.post("/api/chats", async (req,res) => {
+app.get("/api/test", ClerkExpressRequireAuth(), (req,res)=>{
+    const userId = req.auth.userId;
+    console.log(userId);
+    res.send("Success");
+})
+
+app.post("/api/chats", ClerkExpressRequireAuth(), async (req,res) => {
     const {userId, text} = req.body;
     try {
         // CREATE A NEW CHAT
@@ -81,6 +91,12 @@ app.post("/api/chats", async (req,res) => {
         console.log(error)
         res.status(500).send({error: error.message})
     }
+})
+
+// ERROR HANDLER - CLERK
+app.use((err, req, res, next) => {
+    console.log(err.stack);
+    res.status(401).send("Unauthenticated!");
 })
 
 app.listen(port, () => {

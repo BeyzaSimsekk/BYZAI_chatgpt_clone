@@ -2,9 +2,31 @@ import { Link } from "react-router-dom";
 import "./Homepage.css";
 import { TypeAnimation } from "react-type-animation";
 import { useState } from "react";
+import { useAuth } from "@clerk/clerk-react";
 
 const Homepage = () => {
   const [typingStatus, setTypingStatus] = useState("human1");
+
+  const { getToken } = useAuth();
+
+  const test = async () => {
+    try {
+      const token = await getToken();
+
+      const response = await fetch("http://localhost:3000/api/test", {
+        method: "GET",
+        credentials: "include",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      const data = await response.text();
+      console.log(data);
+    } catch (error) {
+      console.error("Test failed:", error);
+    }
+  };
 
   return (
     <div className="homepage">
@@ -18,6 +40,7 @@ const Homepage = () => {
           and instant answers.
         </h3>
         <Link to="/dashboard">Get Started</Link>
+        <button onClick={test}>TEST BACKEND AUTH</button>
       </div>
       {/* Right Side */}
       <div className="right">
