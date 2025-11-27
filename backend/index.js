@@ -37,17 +37,19 @@ const imagekit = new ImageKit({
     privateKey: process.env.IMAGE_KIT_PRIVATE_KEY
 })
 
+// UPLOAD IMAGE
 app.get("/api/upload", (req,res) => {
     const result = imagekit.getAuthenticationParameters();
     res.send(result);
 });
 
-// app.get("/api/test", ClerkExpressRequireAuth(), (req,res)=>{
+/* app.get("/api/test", ClerkExpressRequireAuth(), (req,res)=>{
 //     const userId = req.auth.userId;
 //     console.log(userId);
 //     res.send("Success");
-// })
+}) */
 
+// CREATE A NEW CHAT
 app.post("/api/chats", ClerkExpressRequireAuth(), async (req,res) => {
     const userId = req.auth.userId;
     const {text} = req.body;
@@ -90,7 +92,26 @@ app.post("/api/chats", ClerkExpressRequireAuth(), async (req,res) => {
 
     } catch (error) {
         console.log(error)
-        res.status(500).send({error: error.message})
+        res.status(500).send("Error creating chat!",{error: error.message})
+    }
+})
+
+// 
+app.get("/api/userchats",ClerkExpressRequireAuth(), async (req,res) => {
+    const userId = req.auth.userId;
+
+    try {
+        const userChats = await UserChats.findOne({ userId });
+        
+        // Kullanıcının hiç chat'i yoksa
+        if (!userChats) {
+            return res.status(200).send([]);
+        }
+        
+        res.status(200).send(userChats.chats);
+    } catch (error) {
+        console.log(error)
+        res.status(500).send("Error fetching userchats!",{error: error.message})
     }
 })
 
