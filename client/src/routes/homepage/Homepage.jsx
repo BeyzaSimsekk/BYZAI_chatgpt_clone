@@ -3,25 +3,14 @@ import "./Homepage.css";
 import { TypeAnimation } from "react-type-animation";
 import { useState } from "react";
 import { useAuth } from "@clerk/clerk-react";
+import apiClient from "../../lib/api";
 
 const Homepage = () => {
   const [typingStatus, setTypingStatus] = useState("human1");
 
-  const { getToken } = useAuth();
-
   const test = async () => {
     try {
-      const token = await getToken();
-
-      const response = await fetch("http://localhost:3000/api/test", {
-        method: "GET",
-        credentials: "include",
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-
-      const data = await response.text();
+      const data = await apiClient.get("/api/test");
       console.log(data);
     } catch (error) {
       console.error("Test failed:", error);
