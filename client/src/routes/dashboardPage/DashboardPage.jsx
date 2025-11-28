@@ -1,11 +1,25 @@
 import "./DashboardPage.css";
-import { useAuth } from "@clerk/clerk-react";
 import apiClient from "../../lib/api";
 import { useNavigate } from "react-router-dom";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 
 const DashboardPage = () => {
-  const { userId } = useAuth();
+  const queryClient = useQueryClient();
+
   const navigate = useNavigate();
+
+  const mutation = useMutation({
+    mutationFn: (text) => apiClient.post("/api/chats", { text }),
+    onSuccess: (id) => {
+      // Chat listesini yenile
+      queryClient.invalidateQueries({ queryKey: ["userChats"] });
+      // Yeni chat sayfasına yönlendir
+      navigate(`/dashboard/chats/${id}`);
+    },
+    onError: (error) => {
+      console.error("Chat oluşturma hatası:", error);
+    },
+  });
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -13,18 +27,10 @@ const DashboardPage = () => {
     const text = e.target.text.value;
     if (!text) return;
 
-    try {
-      // Post request to create a new chat with apiClient
-      const response = await apiClient.post("/api/chats", { text });
-      console.log("Chat oluşturuldu:", response);
+    mutation.mutate(text);
 
-      // Formu temizle
-      e.target.reset();
-
-      navigate(`/dashboard/chats/${response}`);
-    } catch (error) {
-      console.error("Chat oluşturma hatası:", error);
-    }
+    // Formu temizle
+    e.target.reset();
   };
 
   return (
@@ -49,10 +55,23 @@ const DashboardPage = () => {
           </div>
         </div>
       </div>
+
+      <div className="UX">
+        {mutation.isPending && <div className="loading">Creating chat...</div>}
+        {mutation.isError && (
+          <div className="error">Failed to create chat. Try again.</div>
+        )}
+      </div>
+
       <div className="formContainer">
         <form onSubmit={handleSubmit}>
-          <input type="text" name="text" placeholder="Ask me anything..." />
-          <button>
+          <input
+            type="text"
+            name="text"
+            placeholder="Ask me anything..."
+            disabled={mutation.isPending}
+          />
+          <button disabled={mutation.isPending}>
             <img src="/arrow.png" alt="" />
           </button>
         </form>
