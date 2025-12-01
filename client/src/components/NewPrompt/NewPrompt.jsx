@@ -4,8 +4,10 @@ import Upload from "../Upload/Upload.jsx";
 import { useState } from "react";
 import model from "../../lib/gemini.js";
 import Markdown from "react-markdown";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import apiClient from "../../lib/api.js";
 
-const NewPrompt = () => {
+const NewPrompt = ({ data }) => {
   const [question, setQuestion] = useState("");
   const [answer, setAnswer] = useState("");
   const [img, setImg] = useState({
@@ -29,10 +31,41 @@ const NewPrompt = () => {
   });
 
   const endRef = useRef(null);
+  const formRef = useRef(null);
 
   useEffect(() => {
     endRef.current.scrollIntoView({ behavior: "smooth" });
-  }, [question, answer, img.dbData]);
+  }, [data, question, answer, img.dbData]);
+
+  const queryClient = useQueryClient();
+
+  const mutation = useMutation({
+    mutationFn: () =>
+      apiClient.put(`/api/chats/${data._id}`, {
+        question: question.length ? question : undefined,
+        answer,
+        img: img.dbData?.filePath || undefined,
+      }),
+    onSuccess: () => {
+      // Chat listesini yenile
+      queryClient
+        .invalidateQueries({ queryKey: ["chat", data._id] })
+        .then(() => {
+          formRef.current.reset();
+          setQuestion("");
+          setAnswer("");
+          setImg({
+            isLoading: false,
+            error: "",
+            dbData: {},
+            aiData: {},
+          });
+        });
+    },
+    onError: (error) => {
+      console.error("Chat oluşturma hatası:", error);
+    },
+  });
 
   const add = async (text) => {
     // const listModels = async () => {
@@ -47,24 +80,23 @@ const NewPrompt = () => {
 
     setQuestion(text);
 
-    const result = await chat.sendMessageStream(
-      Object.entries(img.aiData).length ? [img.aiData, text] : [text]
-    );
+    try {
+      const result = await chat.sendMessageStream(
+        Object.entries(img.aiData).length ? [img.aiData, text] : [text]
+      );
 
-    let accumulatedText = "";
-    for await (const chunk of result.stream) {
-      const chunkText = chunk.text();
-      console.log(chunkText);
-      accumulatedText += chunkText;
-      setAnswer(accumulatedText);
+      let accumulatedText = "";
+      for await (const chunk of result.stream) {
+        const chunkText = chunk.text();
+        console.log(chunkText);
+        accumulatedText += chunkText;
+        setAnswer(accumulatedText);
+      }
+
+      mutation.mutate();
+    } catch (error) {
+      console.log(error);
     }
-
-    setImg({
-      isLoading: false,
-      error: "",
-      dbData: {},
-      aiData: {},
-    });
   };
 
   const handleSubmit = async (e) => {
@@ -102,7 +134,7 @@ const NewPrompt = () => {
       )}
 
       <div className="endChat" ref={endRef}></div>
-      <form className="newForm" onSubmit={handleSubmit}>
+      <form className="newForm" onSubmit={handleSubmit} ref={formRef}>
         <Upload setImg={setImg} />
         <input id="file" type="file" multiple={false} hidden />
         <input type="text" name="text" placeholder="Ask anything..." />

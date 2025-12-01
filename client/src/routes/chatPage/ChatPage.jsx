@@ -4,6 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import apiClient from "../../lib/api";
 import { useLoaderData, useLocation } from "react-router-dom";
 import Markdown from "react-markdown";
+import { Fragment } from "react";
 
 const ChatPage = () => {
   const path = useLocation().pathname;
@@ -25,15 +26,15 @@ const ChatPage = () => {
           ) : error ? (
             "Something went wrong!"
           ) : (
-            data?.history?.map((message, index) => (
-              <>
+            data?.history?.map((message, i) => (
+              <Fragment key={i}>
                 {message.img && (
                   <img
                     src={
-                      img.dbData.filePath.startsWith("http")
-                        ? img.dbData.filePath
+                      message.img.startsWith("http")
+                        ? message.img
                         : `${import.meta.env.VITE_IMAGE_KIT_ENDPOINT}/${
-                            img.dbData.filePath
+                            message.img
                           }`
                     }
                     alt="uploaded"
@@ -48,15 +49,15 @@ const ChatPage = () => {
                   className={
                     message.role === "user" ? "message user" : "message"
                   }
-                  key={index}
+                  key={i}
                 >
                   <Markdown>{message.parts[0].text}</Markdown>
                 </div>
-              </>
+              </Fragment>
             ))
           )}
 
-          <NewPrompt />
+          {data && <NewPrompt data={data} />}
         </div>
       </div>
     </div>
