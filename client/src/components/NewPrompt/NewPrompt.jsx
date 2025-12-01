@@ -67,7 +67,7 @@ const NewPrompt = ({ data }) => {
     },
   });
 
-  const add = async (text) => {
+  const add = async (text, isInitial) => {
     // const listModels = async () => {
     //   const KEY = import.meta.env.VITE_GEMINI_PUBLIC_KEY; // senin public key
     //   const res = await fetch(
@@ -78,7 +78,7 @@ const NewPrompt = ({ data }) => {
     // };
     // await listModels();
 
-    setQuestion(text);
+    if (!isInitial) setQuestion(text);
 
     try {
       const result = await chat.sendMessageStream(
@@ -105,8 +105,20 @@ const NewPrompt = ({ data }) => {
     const text = e.target.text.value;
     if (!text) return;
 
-    add(text);
+    add(text, false);
   };
+
+  // IN PRODUCTION WE DON'T NEED IT
+  const hasRun = useRef(false);
+
+  useEffect(() => {
+    if (!hasRun.current) {
+      if (data?.history?.length === 1) {
+        add(data.history[0].parts[0].text, true);
+      }
+    }
+    hasRun.current = true;
+  }, []);
 
   return (
     <>
