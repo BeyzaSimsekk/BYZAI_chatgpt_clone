@@ -13,29 +13,57 @@ import { ClerkExpressRequireAuth } from "@clerk/clerk-sdk-node";
 const port = process.env.PORT || 3000;
 const app = express();
 
+
+// CORS - Multiple origins için
+const allowedOrigins = [
+  process.env.CLIENT_URL,
+  'http://localhost:5173',
+  'http://localhost:3000'
+].filter(Boolean);
+
 app.use(
   cors({
-    origin: process.env.CLIENT_URL,
+    origin: function (origin, callback) {
+      // Allow requests with no origin (mobile apps, Postman, etc.)
+      if (!origin) return callback(null, true);
+      
+      if (allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error('Not allowed by CORS'));
+      }
+    },
     credentials: true,
   })
 );
 
 app.use(express.json());
 
+// MongoDB Connection
 const connect = async () => {
-    try {
-        await mongoose.connect(process.env.MONGODB)
-        console.log("Connected to MONGODB")
-    } catch (error) {
-        console.log(error)
-    }
-}
+  try {
+    await mongoose.connect(process.env.MONGODB);
+    console.log("Connected to MONGODB");
+  } catch (error) {
+    console.log("MongoDB connection error:", error);
+  }
+};
 
+// ImageKit Configuration
 const imagekit = new ImageKit({
     urlEndpoint: process.env.IMAGE_KIT_ENDPOINT,
     publicKey: process.env.IMAGE_KIT_PUBLIC_KEY,
     privateKey: process.env.IMAGE_KIT_PRIVATE_KEY
 })
+
+// Health Check Endpoint
+app.get("/", (req, res) => {
+  res.json({ 
+    status: "OK", 
+    message: "BYZAI Backend API is running",
+    timestamp: new Date().toISOString()
+  });
+});
 
 // UPLOAD IMAGE
 app.get("/api/upload", (req,res) => {
@@ -63,7 +91,7 @@ app.post("/api/chats", ClerkExpressRequireAuth(), async (req,res) => {
       const savedChat = await newChat.save();
 
       // CHECK IF THE USERCHATS EXISTS
-      const userChats = await UserChats.find({userId:userId});
+      const userChats = await UserChats.findOne({ userId: userId });
 
       // IF DOESN'T EXIST CREATE A NEW ONE AND ADD THE CHAT IN THE CHATS ARRAY
       if(!userChats.length) {
@@ -122,6 +150,10 @@ app.get("/api/chats/:id", ClerkExpressRequireAuth(), async (req,res) => {
     try {
         const chat = await Chat.findOne({ _id:req.params.id, userId });
 
+        if (!chat) {
+            return res.status(404).json({ error: "Chat not found" });
+        }
+
         res.status(200).send(chat);
     } catch (error) {
         console.log(error)
@@ -163,7 +195,15 @@ app.use((err, req, res, next) => {
     res.status(401).send("Unauthenticated!");
 })
 
-app.listen(port, () => {
-    connect()
-    console.log(`Server running on ${port}`)
-})
+// Connect to MongoDB and start server
+connect();
+
+// Vercel serverless function export
+export default app;
+
+// For local development
+if (process.env.NODE_ENV !== 'production') {
+  app.listen(port, () => {
+    console.log(`Server running on ${port}`);
+  });
+}
