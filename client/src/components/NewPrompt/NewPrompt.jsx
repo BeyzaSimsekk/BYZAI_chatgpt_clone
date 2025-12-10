@@ -17,13 +17,13 @@ const NewPrompt = ({ data }) => {
     aiData: {},
   });
 
-  // model will remember the conversation
   const chat = model.startChat({
     history: [
-      data?.history.map(({ role, parts }) => ({
-        role,
-        parts: [{ text: parts[0].text }],
-      })),
+      { role: "user", parts: [{ text: "Hello, I have 2 dogs in my house." }] },
+      {
+        role: "model",
+        parts: [{ text: "Great to meet you. What would you like to know?" }],
+      },
     ],
     generationConfig: {
       // maxOutputTokens: 100,
