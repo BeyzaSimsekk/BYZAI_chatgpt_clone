@@ -1,5 +1,5 @@
 import express from "express";
-//import dotenv from "dotenv";
+import dotenv from "dotenv";
 import cors from "cors";
 import ImageKit from 'imagekit';
 import mongoose from "mongoose";
@@ -8,7 +8,7 @@ import UserChats from "./models/userChats.js";
 import { ClerkExpressRequireAuth } from "@clerk/clerk-sdk-node";
 
 
-//dotenv.config();
+dotenv.config();
 
 const port = process.env.PORT || 3000;
 const app = express();
@@ -202,8 +202,6 @@ connect();
 export default app;
 
 // For local development
-if (process.env.NODE_ENV !== 'production') {
-  app.listen(port, () => {
-    console.log(`Server running on ${port}`);
-  });
-}
+app.listen(port, () => {
+  console.log(`Server running on ${port}`);
+});
